@@ -1,0 +1,28 @@
+﻿.body-space {
+    display: flex;
+    height: 97vh;
+}
+
+.padding-left {
+    width: 50vw;
+}
+
+.padding-right {
+    width: 50vw;
+}
+
+.central-space {
+    Width: 50vw;
+    align-content: center;
+}
+
+#gameCanvas {
+    box-shadow: 0px 0px 5px 2px #E5E0ED;
+}
+
+.score {
+    text-align: left;
+    font-size: 25px;
+    color: whitesmoke;
+    width: 100%;
+}
