@@ -5,6 +5,7 @@ const snake_border = 'hsla(308, 69%, 46%, 1)';
 const snake_shadow = 'hsla(316, 69%, 55%, 1)';
 const snakeboard = document.getElementById("gameCanvas");
 const snakeboard_ctx = gameCanvas.getContext("2d");
+const startBtn = document.getElementById("startBtn");
 let snake = [
     { x: 200, y: 200 },
     { x: 190, y: 200 },
@@ -19,22 +20,43 @@ let foody;
 let dx = 10;
 let dy = 0;
 
-main();
+
 
 gen_food();
 
+
 document.addEventListener("keydown", changeDirection);
 
+
+startBtn.addEventListener('click', function () { startGame() });
+
+function startGame() {
+    document.getElementById("gameCanvas").style.display = 'flex';
+    document.getElementById("startGame").style.display = 'none';
+    main();
+}
+
+function gameOver() {
+    document.getElementById("gameCanvas").style.display = 'none';
+    document.getElementById("startGame").style.display = 'block';
+    score = 0;
+    // gameOver screen not restarting game 
+}
+
 function main() {
-    if (has_game_ended()) return;
-    changing_direction = false;
-    setTimeout(function onTick() {
-        clearCanvas();
-        drawFood();
-        moveSnake();
-        drawSnake();
-        main();
-    }, 100)
+    if (has_game_ended()) {
+        gameOver();
+    }
+    else {
+        changing_direction = false;
+        setTimeout(function onTick() {
+            clearCanvas();
+            drawFood();
+            moveSnake();
+            drawSnake();
+            main();
+        }, 100)
+    }
 }
 function clearCanvas() {
     snakeboard_ctx.fillStyle = board_background;
