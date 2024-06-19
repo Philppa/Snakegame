@@ -3,8 +3,23 @@ const board_background = "hsla(265, 100%, 2%, 1)";
 const snake_col = 'hsla(308, 69%, 98%, 1)';
 const snake_border = 'hsla(308, 69%, 46%, 1)';
 const snake_shadow = 'hsla(316, 69%, 55%, 1)';
-const snakeboard = document.getElementById("gameCanvas");
-const snakeboard_ctx = gameCanvas.getContext("2d");
+const snakeboard = document.createElement('canvas');
+snakeboard.id = "gameCanvas";
+snakeboard.className = "gameCanvas";
+snakeboard.width = 400;
+snakeboard.height = 400;
+const body = document.getElementsByClassName("game-area")[0];
+const startScreen = document.createElement('Div');
+startScreen.id = "startScreen";
+startScreen.classList.add("gameCanvas");
+startScreen.classList.add("start-screen");
+body.append(startScreen);
+const startBtn = document.createElement('input');
+startBtn.id = "startBtn";
+startBtn.setAttribute('type', 'button');
+startBtn.setAttribute('value', 'start');
+startScreen.append(startBtn);
+let snakeboard_ctx;
 let snake = [
     { x: 200, y: 200 },
     { x: 190, y: 200 },
@@ -12,6 +27,7 @@ let snake = [
     { x: 170, y: 200 },
     { x: 160, y: 200 }
 ]
+
 let score = 0;
 let changing_direction = false;
 let foodx;
@@ -19,22 +35,53 @@ let foody;
 let dx = 10;
 let dy = 0;
 
-main();
+
 
 gen_food();
 
+
 document.addEventListener("keydown", changeDirection);
 
+
+startBtn.addEventListener('click', function () { startGame() });
+
+function startGame() {
+    body.append(snakeboard);
+    startScreen.remove();
+    snakeboard_ctx = gameCanvas.getContext("2d");
+    
+    main();
+}
+
+function gameOver() {
+    score = 0;
+    snake = [
+        { x: 200, y: 200 },
+        { x: 190, y: 200 },
+        { x: 180, y: 200 },
+        { x: 170, y: 200 },
+        { x: 160, y: 200 }
+    ]
+    snakeboard.remove();
+    body.append(startScreen);
+    startScreen.append(startBtn);
+    
+}
+
 function main() {
-    if (has_game_ended()) return;
-    changing_direction = false;
-    setTimeout(function onTick() {
-        clearCanvas();
-        drawFood();
-        moveSnake();
-        drawSnake();
-        main();
-    }, 100)
+    if (has_game_ended()) {
+        gameOver();
+    }
+    else {
+        changing_direction = false;
+        setTimeout(function onTick() {
+            clearCanvas();
+            drawFood();
+            moveSnake();
+            drawSnake();
+            main();
+        }, 100)
+    }
 }
 function clearCanvas() {
     snakeboard_ctx.fillStyle = board_background;
