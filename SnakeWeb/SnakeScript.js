@@ -1,4 +1,135 @@
-﻿const board_border = 'hsla(265, 100%, 97%, 1)';
+﻿const Enum_Classes = Object.freeze({
+    GameCanvas: 'game-canvas',
+    Backglow: 'backglow',
+    StartScreen: 'start-screen'
+})
+const Enum_Identifiers = Object.freeze({
+    GameCanvas: 'game-canvas'
+})
+
+class Component {
+    element;
+
+    constructor({ type = 'div', classList = '' } = {}) {
+        const createElement = (() => {
+            this.element = document.createElement(type);
+
+            this.element.classList = `${classList}`;
+        })();
+    }
+
+    addEvents(events = []) {
+        for (const event of events) this.element.addEventListener(event.type, event.action);
+    }
+}
+
+class Game extends Component {
+    #screen = {
+        startScreen: undefined,
+        gameOverScreen: undefined,
+        playScreen: undefined
+    }
+
+
+    constructor({ } = {}) {
+        super({
+            classList: `${Enum_Classes.GameCanvas} ${Enum_Classes.StartScreen}`
+        });
+
+        this.#StartScreen = new StartScreen();
+        this.#PlayScreen = document.createElement('canvas');
+
+        
+    }
+
+
+    set #StartScreen(value) { this.#screen.startScreen = value; }
+    get StartScreen() { return this.#screen.startScreen; }
+}
+
+class Screen extends Component {
+    constructor({ classList = ''} = {}) {
+        super({
+            classList: classList
+        })
+    }
+}
+class StartScreen extends Screen {
+    #components = {
+        startBtn: undefined
+    }
+
+    constructor({ classList = `${Enum_Classes.StartScreen}` } = {}) {
+        super({
+            classList: classList
+        });
+
+        this.#build();
+    }
+
+    #build({ } = {}) {
+        const createComponents = (() => {
+            const startBtn = (() => {
+                const events = [
+                    {
+                        type: 'click',
+                        action: (e) => {
+                            console.log('asiodjfisdajf');
+                        }
+                    }
+                ]
+
+                this.#StartBtn = new StartBtn({
+                    events: events
+                })
+            })();
+
+            
+        })();
+    }
+
+    get StartBtn() { return this.#components.startBtn; }
+    set #StartBtn(value) { this.#components.startBtn = value; }
+}
+
+class PlayScreen extends Screen {
+    constructor({ height = 400, width = 400, classList = `` } = {}) {
+        super({
+            classList: classList
+        })
+    }
+}
+
+class Button extends Component {
+
+    constructor({ text, events = [] } = {}) {
+        super({
+            type: 'button',
+            classList: ''
+        });
+
+        this.element.innerText = text;
+
+        this.addEvents(events);
+    }
+}
+
+
+class StartBtn extends Button {
+
+    constructor({ events = [] } = {}) {
+        super({
+            text: 'Start',
+            events: events
+        })
+
+    }
+}
+
+
+
+
+const board_border = 'hsla(265, 100%, 97%, 1)';
 const board_background = "hsla(265, 100%, 2%, 1)";
 const snake_col = 'hsla(308, 69%, 98%, 1)';
 const snake_border = 'hsla(308, 69%, 46%, 1)';
