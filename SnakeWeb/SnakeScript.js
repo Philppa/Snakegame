@@ -69,12 +69,13 @@ class StartScreen extends Screen {
 
     #build({ } = {}) {
         const createComponents = (() => {
+
             const startBtn = (() => {
                 const events = [
                     {
                         type: 'click',
                         action: (e) => {
-                            console.log('asiodjfisdajf');
+                            console.log(e);
                         }
                     }
                 ]
