@@ -40,6 +40,8 @@ class Component {
     constructor({ type = 'Div', classList = '' } = {}) {
         this.element = document.createElement(type);
         this.element.classList = `${classList}`;
+        //this.element.classList = enum_cssClasses.startScreen;
+        console.log(classList);
     }
 
     addEvents(events = []) {
@@ -63,7 +65,7 @@ class Screen extends Component {
             classList: classList
         })
 
-        this.element.classList = enum_cssClasses.backGlow;
+        this.element.classList.add(enum_cssClasses.backGlow);
     }
 
     
@@ -71,7 +73,7 @@ class Screen extends Component {
 
 class Screen_Start extends Screen {
     #component = {
-        startBtn: undefined;
+        startBtn: undefined
     }
 
     constructor({classList = enum_cssClasses.startScreen } = {}) {
@@ -79,6 +81,7 @@ class Screen_Start extends Screen {
             classList: classList
         })
         this.#build();
+       this.element.append(this.#component.startBtn.element);
     }
 
     #build({ } = {}) {
@@ -88,11 +91,11 @@ class Screen_Start extends Screen {
                     new SnakeWeb_Event({
                         type: SnakeWeb_Event.Types.Click,
                         action: (e) => {
-                            console.log(e);
+                            startGame();
                         }
                     })
                 ]
-                this.#StartBtn = new //// COME BACK AFTER CLASS IS CREATED 
+                this.#component.startBtn = new Btn_Start({ text: "Start", id: "startBtn", events: events });
             })();
         })();
     }
@@ -101,17 +104,41 @@ class Screen_Start extends Screen {
     set StartBtn(value) { this.#component.startBtn = value; }
 }
 
-class Button extends Component {
+class Btn extends Component {
 
-    constructor({text, id, events = []} = {}) {
+    constructor({text, events = []} = {}) {
         super({
-            type: 'input';
+            type: 'input'
         })
-        this.element.id = id;
-        this.element.value
+        this.element.value = text;
+        this.element.setAttribute('type', 'button');
         this.addEvents(events);
 
 
     }
+}
+
+class Btn_Start extends Btn {
+
+    constructor({ text, id, events = [] } = {}) {
+        super({
+            text: text,
+            events: events
+        })
+        this.element.id = id;
+    }
+}
+
+const body = document.getElementsByClassName("game-area")[0];
+const startScreenObj = new Screen_Start({ classList: enum_cssClasses.startScreen });
+const startScreen = startScreenObj.element
+body.append(startScreen);
+
+function startGame() {
+    //body.append(snakeboard);
+    startScreen.remove();
+    //snakeboard_ctx = gameCanvas.getContext("2d");
+
+    //main();
 }
 
