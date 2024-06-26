@@ -1,4 +1,5 @@
-﻿//Need to create a class that creates start screens...
+﻿const body = document.getElementsByClassName("game-area")[0];
+
 const enum_cssClasses = Object.freeze({
     backGlow: 'back-glow',
     startScreen: 'start-screen'
@@ -40,8 +41,6 @@ class Component {
     constructor({ type = 'Div', classList = '' } = {}) {
         this.element = document.createElement(type);
         this.element.classList = `${classList}`;
-        //this.element.classList = enum_cssClasses.startScreen;
-        console.log(classList);
     }
 
     addEvents(events = []) {
@@ -52,23 +51,45 @@ class Component {
                 [SnakeWeb_Event.AccessorKeys.Type]: type,
                 [SnakeWeb_Event.AccessorKeys.Action]: action
             } = event
-            
+
             this.element.addEventListener(type, action);
         }
+    }
+    remove() {
+        this.element.remove();
     }
 }
 
 class Screen extends Component {
 
-    constructor({ classList = '' } = {}) {
+    constructor({ classList = '', type } = {}) {
         super({
-            classList: classList
+            classList: classList,
+            type: type
         })
 
         this.element.classList.add(enum_cssClasses.backGlow);
     }
 
-    
+
+}
+
+class Screen_Play extends Screen {
+    #context;
+
+    constructor({ } = {}) {
+        super({
+            type: 'canvas'
+        })
+        this.element.id = 'gameCanvas';
+        this.element.height = 400;
+        this.element.width = 400;
+        this.#Context = this.element.getContext("2d");
+
+    }
+
+    get Context() { return this.#context; }
+    set #Context(value) { this.#context = value; }
 }
 
 class Screen_Start extends Screen {
@@ -76,12 +97,12 @@ class Screen_Start extends Screen {
         startBtn: undefined
     }
 
-    constructor({classList = enum_cssClasses.startScreen } = {}) {
+    constructor({ classList = enum_cssClasses.startScreen } = {}) {
         super({
             classList: classList
         })
         this.#build();
-       this.element.append(this.#component.startBtn.element);
+        this.element.append(this.#component.startBtn.element);
     }
 
     #build({ } = {}) {
@@ -106,7 +127,7 @@ class Screen_Start extends Screen {
 
 class Btn extends Component {
 
-    constructor({text, events = []} = {}) {
+    constructor({ text, events = [] } = {}) {
         super({
             type: 'input'
         })
@@ -129,15 +150,69 @@ class Btn_Start extends Btn {
     }
 }
 
-const body = document.getElementsByClassName("game-area")[0];
-const startScreenObj = new Screen_Start({ classList: enum_cssClasses.startScreen });
-const startScreen = startScreenObj.element
-body.append(startScreen);
+class ScreenConductor {
+    #screens = {
+        Screen_Start: undefined,
+        Screen_Play: undefined
+    }
+
+    constructor({ } = {}) {
+        this.Screen_Start = new Screen_Start({ classList: enum_cssClasses.startScreen });
+        this.Screen_Play = new Screen_Play({});
+    }
+
+    showStartScreen() {
+
+        this.#showScreen(this.Screen_Start.element);
+    }
+
+    showPlayScreen() {
+
+        this.#showScreen(this.Screen_Play.element);
+    }
+
+    #clearScreens() {
+        const screens = [
+            this.Screen_Start,
+            this.Screen_Play
+        ]
+
+        //TODO: make remove method
+        for (const screen of screens) screen.remove();
+    }
+
+    #showScreen(screen) {
+        this.#clearScreens();
+        body.append(screen);
+    }
+
+
+    get Screen_Start() { return this.#screens.Screen_Start; }
+    set Screen_Start(value) { this.#screens.Screen_Start = value; }
+    get Screen_Play() { return this.#screens.Screen_Play; }
+    set Screen_Play(value) { this.#screens.Screen_Play = value; }
+
+
+}
+const screenConductor = new ScreenConductor();
+screenConductor.showStartScreen();
+
+
+//----------------------------------------------------------------------Move to classes in another file
+//const snakeboard_ctx = screenConductor.Screen_Play.Context;
+
+//snakeboard_ctx.shadowColor = 'hsla(316, 69%, 55%, 1)';
+//snakeboard_ctx.shadowOffsetY = 1;
+//snakeboard_ctx.ShadowOffSetX = -6;
+//snakeboard_ctx.shadowBlur = 5;
+//snakeboard_ctx.fillStyle = 'hsla(308, 69%, 98%, 1)';
+//snakeboard_ctx.strokestyle = 'hsla(308, 69%, 46%, 1)';
+//snakeboard_ctx.fillRect(200, 200, 10, 10);
+//snakeboard_ctx.strokeRect(200, 200, 10, 10);
+
 
 function startGame() {
-    //body.append(snakeboard);
-    startScreen.remove();
-    //snakeboard_ctx = gameCanvas.getContext("2d");
+    screenConductor.showPlayScreen();
 
     //main();
 }

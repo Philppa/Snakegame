@@ -1,6 +1,7 @@
 ﻿body {
     background-color: #313338
 }
+
 .body-space {
     display: flex;
     height: 97vh;
@@ -21,8 +22,8 @@
 
 .back-glow {
     box-shadow: 0px 0px 5px 2px #E5E0ED;
-    
 }
+
 .start-screen {
     align-content: center;
     text-align: center;
@@ -31,16 +32,21 @@
     background-color: hsla(265, 100%, 2%, 1);
 }
 
-
 .score {
     text-align: left;
     font-size: 25px;
     color: whitesmoke;
     width: 100%;
 }
+
 #startBtn {
     border-radius: 7px;
     border: none;
     background-color: whitesmoke;
     box-shadow: 0px 0px 3px 2px #E5E0ED;
+}
+
+#gameCanvas {
+    background-color: hsla(265, 100%, 2%, 1);
+    margin-bottom: -4px;
 }
