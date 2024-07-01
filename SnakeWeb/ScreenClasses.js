@@ -2,7 +2,8 @@
 
 const enum_cssClasses = Object.freeze({
     backGlow: 'back-glow',
-    startScreen: 'start-screen'
+    startScreen: 'start-screen',
+    score: 'score'
 })
 
 class SnakeWeb_Event {
@@ -25,14 +26,14 @@ class SnakeWeb_Event {
         this.#action = action;
     }
 
+    get Action() { return this.#action; }
+    get Type() { return this.#type; }
+
     static IsInstance(event) {
         if (!event) return false;
 
         return event.constructor.name === this.name;
     }
-
-    get Action() { return this.#action; }
-    get Type() { return this.#type; }
 }
 
 class Component {
@@ -81,9 +82,8 @@ class Screen_Play extends Screen {
         super({
             type: 'canvas'
         })
+
         this.element.id = 'gameCanvas';
-        this.element.height = 400;
-        this.element.width = 400;
         this.#Context = this.element.getContext("2d");
 
     }
@@ -101,9 +101,14 @@ class Screen_Start extends Screen {
         super({
             classList: classList
         })
+
         this.#build();
+
         this.element.append(this.#component.startBtn.element);
     }
+
+    get StartBtn() { return this.#component.startBtn; }
+    set StartBtn(value) { this.#component.startBtn = value; }
 
     #build({ } = {}) {
         const createComponents = (() => {
@@ -116,13 +121,11 @@ class Screen_Start extends Screen {
                         }
                     })
                 ]
+
                 this.#component.startBtn = new Btn_Start({ text: "Start", id: "startBtn", events: events });
             })();
         })();
     }
-
-    get StartBtn() { return this.#component.startBtn; }
-    set StartBtn(value) { this.#component.startBtn = value; }
 }
 
 class Btn extends Component {
@@ -131,11 +134,11 @@ class Btn extends Component {
         super({
             type: 'input'
         })
+
         this.element.value = text;
         this.element.setAttribute('type', 'button');
+
         this.addEvents(events);
-
-
     }
 }
 
@@ -146,20 +149,56 @@ class Btn_Start extends Btn {
             text: text,
             events: events
         })
+
         this.element.id = id;
+    }
+}
+
+class Score extends Component {
+    #score = 0
+
+    constructor({ } = {}) {
+        super({
+            classList: enum_cssClasses.score
+        })
+
+        this.element.id = "score";
+        this.element.innerHTML = this.Score;
+    }
+
+    get Score() { return this.#score; }
+    set #Score(value) { this.#score = value; }
+
+    increase() {
+        this.#Score = this.Score + 10;
+        this.element.innerHTML = this.Score;
+    }
+
+    reset() {
+        this.#Score = 0;
+        this.element.innerHTML = this.Score;
     }
 }
 
 class ScreenConductor {
     #screens = {
         Screen_Start: undefined,
-        Screen_Play: undefined
+        Screen_Play: undefined,
+        Score: undefined
     }
 
     constructor({ } = {}) {
         this.Screen_Start = new Screen_Start({ classList: enum_cssClasses.startScreen });
         this.Screen_Play = new Screen_Play({});
+        this.Score = new Score({});
     }
+
+    get Screen_Start() { return this.#screens.Screen_Start; }
+    set Screen_Start(value) { this.#screens.Screen_Start = value; }
+    get Screen_Play() { return this.#screens.Screen_Play; }
+    set Screen_Play(value) { this.#screens.Screen_Play = value; }
+    get Score() { return this.#screens.Score; }
+    set Score(value) { this.#screens.Score = value; }
 
     showStartScreen() {
 
@@ -174,28 +213,25 @@ class ScreenConductor {
     #clearScreens() {
         const screens = [
             this.Screen_Start,
-            this.Screen_Play
+            this.Screen_Play,
+            this.Score
         ]
 
-        //TODO: make remove method
+        
         for (const screen of screens) screen.remove();
     }
 
     #showScreen(screen) {
         this.#clearScreens();
+
         body.append(screen);
+        body.append(this.Score.element);
     }
 
-
-    get Screen_Start() { return this.#screens.Screen_Start; }
-    set Screen_Start(value) { this.#screens.Screen_Start = value; }
-    get Screen_Play() { return this.#screens.Screen_Play; }
-    set Screen_Play(value) { this.#screens.Screen_Play = value; }
-
-
 }
+
+
 const screenConductor = new ScreenConductor();
-screenConductor.showStartScreen();
 
 
 //----------------------------------------------------------------------Move to classes in another file
@@ -214,6 +250,9 @@ screenConductor.showStartScreen();
 function startGame() {
     screenConductor.showPlayScreen();
 
+    screenConductor.Score.increase();
+
     //main();
 }
 
+export { ScreenConductor, screenConductor };
