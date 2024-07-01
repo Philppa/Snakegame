@@ -1,7 +1,8 @@
-﻿const body = document.getElementsByClassName("game-area")[0];
+﻿let body = document.getElementsByClassName("central-space")[0];
 
 const enum_cssClasses = Object.freeze({
     backGlow: 'back-glow',
+    gameArea: 'game-area',
     startScreen: 'start-screen',
     score: 'score'
 })
@@ -15,7 +16,7 @@ class SnakeWeb_Event {
         Click: 'click',
         KeyDown: 'keydown',
         Custom: {
-
+            StartGame: 'start-game'
         }
     })
     #action;
@@ -58,6 +59,35 @@ class Component {
     }
     remove() {
         this.element.remove();
+    }
+}
+
+class GameArea extends Component {
+
+
+    constructor({ } = {}) {
+        super({
+            classList: enum_cssClasses.gameArea
+        })
+
+        const addEvents = (() => {
+            const events = [
+                new SnakeWeb_Event({
+                    type: SnakeWeb_Event.Types.Custom.StartGame,
+                    action: (e) => {
+                        this.start();
+                    }
+                })
+            ]
+
+            this.addEvents(events);
+        })();
+    }
+
+    start() {
+        screenConductor.showPlayScreen();
+
+        screenConductor.Score.increase();
     }
 }
 
@@ -117,7 +147,11 @@ class Screen_Start extends Screen {
                     new SnakeWeb_Event({
                         type: SnakeWeb_Event.Types.Click,
                         action: (e) => {
-                            startGame();
+                            const event_startGame = new Event(SnakeWeb_Event.Types.Custom.StartGame, {
+                                bubbles: true
+                            })
+
+                            this.element.dispatchEvent(event_startGame);
                         }
                     })
                 ]
@@ -184,13 +218,17 @@ class ScreenConductor {
     #screens = {
         Screen_Start: undefined,
         Screen_Play: undefined,
-        Score: undefined
+        Score: undefined,
+        GameArea: undefined
     }
 
     constructor({ } = {}) {
         this.Screen_Start = new Screen_Start({ classList: enum_cssClasses.startScreen });
         this.Screen_Play = new Screen_Play({});
         this.Score = new Score({});
+        this.GameArea = new GameArea({});
+        body.append(this.GameArea.element);
+        body = this.GameArea.element;
     }
 
     get Screen_Start() { return this.#screens.Screen_Start; }
@@ -199,6 +237,8 @@ class ScreenConductor {
     set Screen_Play(value) { this.#screens.Screen_Play = value; }
     get Score() { return this.#screens.Score; }
     set Score(value) { this.#screens.Score = value; }
+    get GameArea() { return this.#screens.GameArea; }
+    set GameArea(value) { this.#screens.GameArea = value; }
 
     showStartScreen() {
 
@@ -232,6 +272,7 @@ class ScreenConductor {
 
 
 const screenConductor = new ScreenConductor();
+screenConductor.showStartScreen();
 
 
 //----------------------------------------------------------------------Move to classes in another file
@@ -247,12 +288,5 @@ const screenConductor = new ScreenConductor();
 //snakeboard_ctx.strokeRect(200, 200, 10, 10);
 
 
-function startGame() {
-    screenConductor.showPlayScreen();
 
-    screenConductor.Score.increase();
 
-    //main();
-}
-
-export { ScreenConductor, screenConductor };
