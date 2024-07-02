@@ -49,6 +49,4 @@
 #gameCanvas {
     background-color: hsla(265, 100%, 2%, 1);
     margin-bottom: -4px;
-    height: 400px;
-    width: 400px;
 }

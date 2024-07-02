@@ -7,6 +7,8 @@ const enum_cssClasses = Object.freeze({
     score: 'score'
 })
 
+
+
 class SnakeWeb_Event {
     static AccessorKeys = {
         Action: 'Action',
@@ -27,14 +29,13 @@ class SnakeWeb_Event {
         this.#action = action;
     }
 
-    get Action() { return this.#action; }
-    get Type() { return this.#type; }
-
     static IsInstance(event) {
         if (!event) return false;
 
         return event.constructor.name === this.name;
     }
+    get Action() { return this.#action; }
+    get Type() { return this.#type; }
 }
 
 class Component {
@@ -88,6 +89,9 @@ class GameArea extends Component {
         screenConductor.showPlayScreen();
 
         screenConductor.Score.increase();
+        const arr_Snake = new snake();
+        const draw = new Draw_Snake();
+        draw.Draw(arr_Snake.Snake);
     }
 }
 
@@ -112,7 +116,8 @@ class Screen_Play extends Screen {
         super({
             type: 'canvas'
         })
-
+        this.element.height = 400;
+        this.element.width = 400;
         this.element.id = 'gameCanvas';
         this.#Context = this.element.getContext("2d");
 
@@ -137,9 +142,6 @@ class Screen_Start extends Screen {
         this.element.append(this.#component.startBtn.element);
     }
 
-    get StartBtn() { return this.#component.startBtn; }
-    set StartBtn(value) { this.#component.startBtn = value; }
-
     #build({ } = {}) {
         const createComponents = (() => {
             const startBtn = (() => {
@@ -160,6 +162,8 @@ class Screen_Start extends Screen {
             })();
         })();
     }
+    get StartBtn() { return this.#component.startBtn; }
+    set StartBtn(value) { this.#component.startBtn = value; }
 }
 
 class Btn extends Component {
@@ -200,9 +204,6 @@ class Score extends Component {
         this.element.innerHTML = this.Score;
     }
 
-    get Score() { return this.#score; }
-    set #Score(value) { this.#score = value; }
-
     increase() {
         this.#Score = this.Score + 10;
         this.element.innerHTML = this.Score;
@@ -212,6 +213,9 @@ class Score extends Component {
         this.#Score = 0;
         this.element.innerHTML = this.Score;
     }
+
+    get Score() { return this.#score; }
+    set #Score(value) { this.#score = value; }
 }
 
 class ScreenConductor {
@@ -230,15 +234,6 @@ class ScreenConductor {
         body.append(this.GameArea.element);
         body = this.GameArea.element;
     }
-
-    get Screen_Start() { return this.#screens.Screen_Start; }
-    set Screen_Start(value) { this.#screens.Screen_Start = value; }
-    get Screen_Play() { return this.#screens.Screen_Play; }
-    set Screen_Play(value) { this.#screens.Screen_Play = value; }
-    get Score() { return this.#screens.Score; }
-    set Score(value) { this.#screens.Score = value; }
-    get GameArea() { return this.#screens.GameArea; }
-    set GameArea(value) { this.#screens.GameArea = value; }
 
     showStartScreen() {
 
@@ -268,24 +263,97 @@ class ScreenConductor {
         body.append(this.Score.element);
     }
 
+    get Screen_Start() { return this.#screens.Screen_Start; }
+    set Screen_Start(value) { this.#screens.Screen_Start = value; }
+    get Screen_Play() { return this.#screens.Screen_Play; }
+    set Screen_Play(value) { this.#screens.Screen_Play = value; }
+    get Score() { return this.#screens.Score; }
+    set Score(value) { this.#screens.Score = value; }
+    get GameArea() { return this.#screens.GameArea; }
+    set GameArea(value) { this.#screens.GameArea = value; }
+
+}
+
+class snake {
+    #snake = []
+
+    constructor({ } = {}) {
+        this.reset();
+    }
+
+    reset() {
+        this.Snake = [
+            { x: 200, y: 200 },
+            { x: 190, y: 200 },
+            { x: 180, y: 200 },
+            { x: 170, y: 200 },
+            { x: 160, y: 200 }
+        ]
+    }
+
+    add(xShift, yShift) {
+        let newX = this.Snake[0].x + xShift;
+        let newY = this.Snake[0].y + yShift;
+        let newSnakeHead = { x: newX, y: newY };
+        this.Snake.unshift(newSnakeHead);
+    }
+
+    remove() {
+        this.Snake.pop();
+    }
+
+    get Snake() { return this.#snake; }
+    set Snake(value) { this.#snake = value; }
+}
+class Draw {
+    static enum_SnakeCtx = Object.freeze({
+        shadowColor: 'hsla(316, 69%, 55%, 1)',
+        fillStyle: 'hsla(308, 69%, 98%, 1)',
+        strokestyle: 'hsla(308, 69%, 46%, 1)'
+    })
+    #playContext = undefined;
+
+    constructor({ } = { }) {
+        this.#playContext = screenConductor.Screen_Play.Context;
+    
+    }
+
+    elementDraw({ shadowColor = '', shadowOffsetY = 1, ShadowOffSetX = -6, shadowBlur = 5, fillStyle = '', strokestyle = '', objX = 0, objY = 0 }) {
+        
+        this.#playContext.shadowColor = shadowColor;
+        this.#playContext.shadowOffsetY = shadowOffsetY;
+        this.#playContext.ShadowOffSetX = ShadowOffSetX;
+        this.#playContext.shadowBlur = shadowBlur;
+        this.#playContext.fillStyle = fillStyle;
+        this.#playContext.strokestyle = strokestyle;
+        this.#playContext.fillRect(objX, objY, 10, 10);
+        this.#playContext.strokeRect(objX, objY, 10, 10);
+    }
+    set #PlayContext(value) { this.#playContext = value; } 
+}
+
+class Draw_Snake extends Draw {
+    constructor({ } = {}) {
+        super()
+    }
+    Draw(snakeParts = []) {
+        for (const snakePart of snakeParts) {
+            
+            this.elementDraw({
+                shadowColor: Draw.enum_SnakeCtx.shadowColor,
+                fillStyle: Draw.enum_SnakeCtx.fillStyle,
+                strokestyle: Draw.enum_SnakeCtx.strokestyle,
+                objX: snakePart.x,
+                objY: snakePart.y
+            });
+        }
+    }
 }
 
 
 const screenConductor = new ScreenConductor();
 screenConductor.showStartScreen();
 
-
-//----------------------------------------------------------------------Move to classes in another file
-//const snakeboard_ctx = screenConductor.Screen_Play.Context;
-
-//snakeboard_ctx.shadowColor = 'hsla(316, 69%, 55%, 1)';
-//snakeboard_ctx.shadowOffsetY = 1;
-//snakeboard_ctx.ShadowOffSetX = -6;
-//snakeboard_ctx.shadowBlur = 5;
-//snakeboard_ctx.fillStyle = 'hsla(308, 69%, 98%, 1)';
-//snakeboard_ctx.strokestyle = 'hsla(308, 69%, 46%, 1)';
-//snakeboard_ctx.fillRect(200, 200, 10, 10);
-//snakeboard_ctx.strokeRect(200, 200, 10, 10);
 
 
 
