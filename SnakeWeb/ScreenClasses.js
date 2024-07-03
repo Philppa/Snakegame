@@ -326,6 +326,13 @@ class Draw {
         this.#playContext.fillRect(objX, objY, 10, 10);
         this.#playContext.strokeRect(objX, objY, 10, 10);
     }
+
+    canvasClear() {
+
+        this.#playContext.fillStyle = 'hsla(265, 100%, 2%, 1)';
+        this.#playContext.fillRect(0, 0, screenConductor.Screen_Play.element.width, screenConductor.Screen_Play.element.height);
+        this.#playContext.strokeRect(0, 0, screenConductor.Screen_Play.element.width, screenConductor.Screen_Play.element.height);
+    }
     set #PlayContext(value) { this.#playContext = value; } 
 }
 
@@ -334,6 +341,7 @@ class Draw_Snake extends Draw {
         super()
     }
     Draw(snakeParts = []) {
+        
         for (const snakePart of snakeParts) {
             
             this.elementDraw({
@@ -357,29 +365,42 @@ class SnakeVelocity {
     }
 
     ChangeDirection(event) {
-
+        
         switch (event.keyCode) {
             // Move Left
             case 37:
-                if (this.xShift === 10) return;
-                this.xShift = -10;
-                this.yShift = 0;
+                {
+                    if (this.xShift === 10) break;
+                    this.xShift = -10;
+                    this.yShift = 0;
+                    break;
+                }
             // Move Down
             case 38:
-                if (this.yShift === 10) return;
-                this.xShift = 0;
-                this.yShift = -10;
+                {
+                    if (this.yShift === 10) break;
+                    this.xShift = 0;
+                    this.yShift = -10;
+                    break;
+                }
             // Move Right
             case 39:
-                if (this.xShift === -10) return;
-                this.xShift = 10;
-                this.yShift = 0;
+                {
+                    if (this.xShift === -10) break;
+                    this.xShift = 10;
+                    this.yShift = 0;
+                    break;
+                }
             // Move Up
             case 40:
-                if (this.yShift === -10) return;
-                this.xShift = 0;
-                this.yShift = 10;
+                {
+                    if (this.yShift === -10) break;
+                    this.xShift = 0;
+                    this.yShift = 10;
+                    break;
+                }
         }
+        console.log(this.xShift + ' ' + this.yShift);
     }
 
     set xShift(value) { this.#velocity.xShift = value; }
@@ -394,24 +415,26 @@ class Game {
     #snakeVelocity = undefined
     #snakeDraw = undefined
     constructor({ } = {}) {
-        this.#snake = new snake();
-        this.#snakeVelocity = new SnakeVelocity();
-        this.#snakeDraw = new Draw_Snake();
-        document.addEventListener(SnakeWeb_Event.AccessorKeys.KeyDown, this.#snakeVelocity.ChangeDirection);
+        this.#Snake = new snake();
+        this.#SnakeVelocity = new SnakeVelocity();
+        this.#SnakeDraw = new Draw_Snake();
+        document.addEventListener(SnakeWeb_Event.Types.KeyDown, (e) => { this.#snakeVelocity.ChangeDirection(e) });
     }
 
     AdvanceBoardState() {
-        this.#snake.add(this.#snakeVelocity.xShift, this.#snakeVelocity.yShift);
-        this.#snake.pop();
-        this.#snakeDraw.Draw(this.#snake);
+        this.#SnakeDraw.canvasClear();
+        this.#Snake.add(this.#SnakeVelocity.xShift, this.#SnakeVelocity.yShift);
+        this.#Snake.remove();
+        this.#SnakeDraw.Draw(this.#Snake.Snake);
     }
 
     CheckEndGame() {
-        for (snakepart of this.#snake) {
+        
+        for (const snakepart of this.#snake.Snake) {
             const hitLeftWall = snakepart.x < 0;
-            const hitRightWall = snakepart.x > snakeboard.width - 10;
+            const hitRightWall = snakepart.x > screenConductor.Screen_Play.element.width - 10;
             const hitTopWall = snakepart.y < 0;
-            const hitBottomWall = snakepart.y > snakeboard.height - 10;
+            const hitBottomWall = snakepart.y > screenConductor.Screen_Play.element.height - 10;
 
             return hitLeftWall || hitRightWall || hitTopWall || hitBottomWall
         }
@@ -419,8 +442,10 @@ class Game {
 
     set #Snake(value) { this.#snake = value; }
     set #SnakeVelocity(value) { this.#snakeVelocity = value; }
-
-    set #SnakeDraw(value) { this.#SnakeDraw = value; }
+    set #SnakeDraw(value) { this.#snakeDraw = value; }
+    get #Snake() { return this.#snake  }
+    get #SnakeVelocity() {return this.#snakeVelocity  }
+    get #SnakeDraw() { return this.#snakeDraw }
 }
 
 
@@ -429,10 +454,12 @@ screenConductor.showStartScreen();
 const game = new Game();
 
 function Main(){
-
-    if (game.CheckEndGame) return screenConductor.Screen_Start;
+    
+    if (game.CheckEndGame()) return screenConductor.showStartScreen();
+    
     setTimeout(function onTick() {
         game.AdvanceBoardState();
+        Main();
     },100)
 }
 
