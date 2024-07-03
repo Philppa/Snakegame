@@ -88,10 +88,7 @@ class GameArea extends Component {
     start() {
         screenConductor.showPlayScreen();
 
-        screenConductor.Score.increase();
-        const arr_Snake = new snake();
-        const draw = new Draw_Snake();
-        draw.Draw(arr_Snake.Snake);
+        Main();
     }
 }
 
@@ -350,9 +347,94 @@ class Draw_Snake extends Draw {
     }
 }
 
+class SnakeVelocity {
+    #velocity = {
+        xShift: 0,
+        yShift: 0
+    }
+    constructor({ } = {}) {
+        this.xShift = 10;
+    }
+
+    ChangeDirection(event) {
+
+        switch (event.keyCode) {
+            // Move Left
+            case 37:
+                if (this.xShift === 10) return;
+                this.xShift = -10;
+                this.yShift = 0;
+            // Move Down
+            case 38:
+                if (this.yShift === 10) return;
+                this.xShift = 0;
+                this.yShift = -10;
+            // Move Right
+            case 39:
+                if (this.xShift === -10) return;
+                this.xShift = 10;
+                this.yShift = 0;
+            // Move Up
+            case 40:
+                if (this.yShift === -10) return;
+                this.xShift = 0;
+                this.yShift = 10;
+        }
+    }
+
+    set xShift(value) { this.#velocity.xShift = value; }
+    get xShift() { return this.#velocity.xShift; }
+
+    set yShift(value) { this.#velocity.yShift = value; }
+    get yShift() { return this.#velocity.yShift; }
+}
+
+class Game {
+    #snake = undefined
+    #snakeVelocity = undefined
+    #snakeDraw = undefined
+    constructor({ } = {}) {
+        this.#snake = new snake();
+        this.#snakeVelocity = new SnakeVelocity();
+        this.#snakeDraw = new Draw_Snake();
+        document.addEventListener(SnakeWeb_Event.AccessorKeys.KeyDown, this.#snakeVelocity.ChangeDirection);
+    }
+
+    AdvanceBoardState() {
+        this.#snake.add(this.#snakeVelocity.xShift, this.#snakeVelocity.yShift);
+        this.#snake.pop();
+        this.#snakeDraw.Draw(this.#snake);
+    }
+
+    CheckEndGame() {
+        for (snakepart of this.#snake) {
+            const hitLeftWall = snakepart.x < 0;
+            const hitRightWall = snakepart.x > snakeboard.width - 10;
+            const hitTopWall = snakepart.y < 0;
+            const hitBottomWall = snakepart.y > snakeboard.height - 10;
+
+            return hitLeftWall || hitRightWall || hitTopWall || hitBottomWall
+        }
+    }
+
+    set #Snake(value) { this.#snake = value; }
+    set #SnakeVelocity(value) { this.#snakeVelocity = value; }
+
+    set #SnakeDraw(value) { this.#SnakeDraw = value; }
+}
+
 
 const screenConductor = new ScreenConductor();
 screenConductor.showStartScreen();
+const game = new Game();
+
+function Main(){
+
+    if (game.CheckEndGame) return screenConductor.Screen_Start;
+    setTimeout(function onTick() {
+        game.AdvanceBoardState();
+    },100)
+}
 
 
 
