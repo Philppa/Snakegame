@@ -273,9 +273,13 @@ class ScreenConductor {
 
 class snake {
     #snake = []
+    #eggCollection;
+    #velocity = undefined
 
-    constructor({ } = {}) {
-        this.reset();
+     constructor({eggCollection } = {}) {
+         this.reset();
+         this.#eggCollection = eggCollection;
+         this.#velocity = new SnakeVelocity();
     }
 
     reset() {
@@ -286,17 +290,48 @@ class snake {
             { x: 170, y: 200 },
             { x: 160, y: 200 }
         ]
+        this.#velocity.reset();
     }
 
-    add(xShift, yShift) {
-        let newX = this.Snake[0].x + xShift;
-        let newY = this.Snake[0].y + yShift;
+    add() {
+        let newX = this.Snake[0].x + this.#velocity.xShift;
+        let newY = this.Snake[0].y + this.#velocity.yShirt;
         let newSnakeHead = { x: newX, y: newY };
         this.Snake.unshift(newSnakeHead);
     }
 
     remove() {
         this.Snake.pop();
+    }
+
+    checkIfDead() {
+
+        for (const snakepart of this.#snake) {
+            const hitLeftWall = snakepart.x < 0;
+            const hitRightWall = snakepart.x > screenConductor.Screen_Play.element.width - 10;
+            const hitTopWall = snakepart.y < 0;
+            const hitBottomWall = snakepart.y > screenConductor.Screen_Play.element.height - 10;
+
+            return hitLeftWall || hitRightWall || hitTopWall || hitBottomWall
+        }
+    }
+
+    checkIfAte() {
+        console.log(this.#eggCollection.Egg);
+        if (this.#snake.x === this.#eggCollection.Egg.x && this.#snake.y === this.#eggCollection.Egg.y) {
+            screenConductor.increase();
+        }
+        else {
+            this.Snake.remove();
+        }
+        
+    }
+
+    update() {
+        
+        this.#snake.add();
+       if (this.#snake.checkIfDead()) game.events.Add(Events_Collector.enum_eventTypes.dead);
+
     }
 
     get Snake() { return this.#snake; }
@@ -307,6 +342,11 @@ class Draw {
         shadowColor: 'hsla(316, 69%, 55%, 1)',
         fillStyle: 'hsla(308, 69%, 98%, 1)',
         strokestyle: 'hsla(308, 69%, 46%, 1)'
+    })
+    static enum_EggCtx = Object.freeze({
+        shadowColor: 'hsla(112, 67%, 51%, 1)',
+        fillStyle: 'hsla(112, 67%, 98%, 1)',
+        strokestyle: 'hsla(112, 67%, 42%, 1)'
     })
     #playContext = undefined;
 
@@ -332,15 +372,14 @@ class Draw {
         this.#playContext.fillStyle = 'hsla(265, 100%, 2%, 1)';
         this.#playContext.fillRect(0, 0, screenConductor.Screen_Play.element.width, screenConductor.Screen_Play.element.height);
         this.#playContext.strokeRect(0, 0, screenConductor.Screen_Play.element.width, screenConductor.Screen_Play.element.height);
-    }
-    set #PlayContext(value) { this.#playContext = value; } 
+    } 
 }
 
 class Draw_Snake extends Draw {
     constructor({ } = {}) {
         super()
     }
-    Draw(snakeParts = []) {
+    draw(snakeParts = []) {
         
         for (const snakePart of snakeParts) {
             
@@ -355,23 +394,45 @@ class Draw_Snake extends Draw {
     }
 }
 
+class Draw_Egg extends Draw {
+    constructor({ } = {}) {
+        super();
+    }
+    draw(egg = []) {
+        this.elementDraw({
+            shadowColor: Draw.enum_EggCtx.shadowColor,
+            fillStyle: Draw.enum_EggCtx.fillStyle,
+            strokestyle: Draw.enum_EggCtx.strokestyle,
+            objX: egg[0].x,
+            objY: egg[0].y
+        })
+    }
+}
+
 class SnakeVelocity {
     #velocity = {
         xShift: 0,
         yShift: 0
     }
+    #speed = 10;
     constructor({ } = {}) {
-        this.xShift = 10;
+        this.reset();
+        document.addEventListener(SnakeWeb_Event.Types.KeyDown, (e) => { this.#snakeVelocity.changeDirection(e) });
     }
 
-    ChangeDirection(event) {
+    reset() {
+        this.xShift = this.#speed;
+        this.yShift = 0;
+    }
+
+    changeDirection(event) {
         
         switch (event.keyCode) {
             // Move Left
             case 37:
                 {
                     if (this.xShift === 10) break;
-                    this.xShift = -10;
+                    this.xShift = -1 * this.#speed;
                     this.yShift = 0;
                     break;
                 }
@@ -380,14 +441,14 @@ class SnakeVelocity {
                 {
                     if (this.yShift === 10) break;
                     this.xShift = 0;
-                    this.yShift = -10;
+                    this.yShift = -1 * this.#speed;
                     break;
                 }
             // Move Right
             case 39:
                 {
                     if (this.xShift === -10) break;
-                    this.xShift = 10;
+                    this.xShift = this.#speed;
                     this.yShift = 0;
                     break;
                 }
@@ -396,11 +457,10 @@ class SnakeVelocity {
                 {
                     if (this.yShift === -10) break;
                     this.xShift = 0;
-                    this.yShift = 10;
+                    this.yShift = this.#speed;
                     break;
                 }
         }
-        console.log(this.xShift + ' ' + this.yShift);
     }
 
     set xShift(value) { this.#velocity.xShift = value; }
@@ -410,42 +470,114 @@ class SnakeVelocity {
     get yShift() { return this.#velocity.yShift; }
 }
 
+class Egg {
+    #egg = [];
+    #min = 0;
+    #max = screenConductor.Screen_Play.element.width - 10;
+    constructor({ } = {}) {
+        this.generate();
+    }
+
+    generate() {
+        let x = this.randomLocation();
+        let y = this.randomLocation();
+        this.#egg = [
+            { x: x, y: y }
+       ]
+    }
+
+    randomLocation() {
+        return Math.round((Math.random() * (this.#max - this.#min) + this.#min) / 10) * 10;
+    }
+
+    get Egg() { return this.#egg; }
+}
+
 class Game {
     #snake = undefined
     #snakeVelocity = undefined
     #snakeDraw = undefined
+    #egg = undefined
+    #eggDraw = undefined
+    events = undefined
+    gameState = '';
     constructor({ } = {}) {
-        this.#Snake = new snake();
-        this.#SnakeVelocity = new SnakeVelocity();
+        this.#egg = new Egg();
+        this.#Snake = new snake(this.#egg.Egg);
         this.#SnakeDraw = new Draw_Snake();
-        document.addEventListener(SnakeWeb_Event.Types.KeyDown, (e) => { this.#snakeVelocity.ChangeDirection(e) });
+        this.events = new Collection();
+        this.#eggDraw = new Draw_Egg();
+       
     }
 
-    AdvanceBoardState() {
+    advanceBoardState() {
         this.#SnakeDraw.canvasClear();
-        this.#Snake.add(this.#SnakeVelocity.xShift, this.#SnakeVelocity.yShift);
-        this.#Snake.remove();
-        this.#SnakeDraw.Draw(this.#Snake.Snake);
+        this.#EggDraw.draw(this.#egg.Egg);
+        this.#Snake.update();
+        this.#SnakeDraw.draw(this.#Snake.Snake);
     }
 
-    CheckEndGame() {
-        
-        for (const snakepart of this.#snake.Snake) {
-            const hitLeftWall = snakepart.x < 0;
-            const hitRightWall = snakepart.x > screenConductor.Screen_Play.element.width - 10;
-            const hitTopWall = snakepart.y < 0;
-            const hitBottomWall = snakepart.y > screenConductor.Screen_Play.element.height - 10;
-
-            return hitLeftWall || hitRightWall || hitTopWall || hitBottomWall
-        }
+    gameOver() {
+        this.#Snake.reset();
+        this.#Egg.generate();
+        this.#snakeDraw.canvasClear();
+        screenConductor.showStartScreen();
     }
 
     set #Snake(value) { this.#snake = value; }
-    set #SnakeVelocity(value) { this.#snakeVelocity = value; }
     set #SnakeDraw(value) { this.#snakeDraw = value; }
-    get #Snake() { return this.#snake  }
-    get #SnakeVelocity() {return this.#snakeVelocity  }
-    get #SnakeDraw() { return this.#snakeDraw }
+    set #Egg(value) { this.#egg = value; }
+    set #EggDraw(value) { this.#eggDraw = value; }
+    get Snake() { return this.#snake;  }
+    get #SnakeDraw() { return this.#snakeDraw; }
+    get Egg() { return this.#egg; }
+    get #EggDraw() { return this.#eggDraw; }
+
+}
+
+class Collection {
+    objects = []
+   
+
+    constructor({ } = {}) {
+       
+    }
+
+    add(type) {
+        if (!type) return;
+        this.objects.push(type);
+    }
+
+    clear() {
+        this.objects = [];
+    }
+}
+
+class Events {
+    static enum_eventTypes = Object.freeze({
+        dead: 'dead',
+        ate: 'ate'
+    })
+    #action;
+
+    constructor({ action } = {}) {
+        this.#action = action
+    }
+
+    /*
+        In the game loop:
+
+        for(const event of this.events) event.action(this);
+
+        this.events.clear();
+
+
+        Snake eat egg:
+
+        action = (game) => {
+            game.addScore(10);
+        }
+    */
 }
 
 
@@ -455,10 +587,10 @@ const game = new Game();
 
 function Main(){
     
-    if (game.CheckEndGame()) return screenConductor.showStartScreen();
+    if (game.checkEndGame()) return game.gameOver();
     
     setTimeout(function onTick() {
-        game.AdvanceBoardState();
+        game.advanceBoardState();
         Main();
     },100)
 }
