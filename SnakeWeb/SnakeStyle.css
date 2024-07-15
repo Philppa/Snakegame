@@ -30,6 +30,8 @@
     height: 400px;
     width: 400px;
     background-color: hsla(265, 100%, 2%, 1);
+    color: whitesmoke;
+    font-size: 25px;
 }
 
 .score {
@@ -39,7 +41,22 @@
     width: 100%;
 }
 
+.try-again-score {
+    margin-top: 5px;
+    align-content: center;
+    text-align: center;
+    color: whitesmoke;
+    font-size: 18px;
+}
+
 #startBtn {
+    border-radius: 7px;
+    border: none;
+    background-color: whitesmoke;
+    box-shadow: 0px 0px 3px 2px #E5E0ED;
+}
+
+#TryAgainBtn {
     border-radius: 7px;
     border: none;
     background-color: whitesmoke;

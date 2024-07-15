@@ -4,7 +4,8 @@ const enum_cssClasses = Object.freeze({
     backGlow: 'back-glow',
     gameArea: 'game-area',
     startScreen: 'start-screen',
-    score: 'score'
+    score: 'score',
+    tryAgainScore: 'try-again-score'
 })
 
 
@@ -41,7 +42,7 @@ class SnakeWeb_Event {
 class Component {
     element;
 
-    constructor({ type = 'Div', classList = '' } = {}) {
+    constructor({ type = 'Div', classList = ''} = {}) {
         this.element = document.createElement(type);
         this.element.classList = `${classList}`;
     }
@@ -94,6 +95,9 @@ class GameArea extends Component {
 }
 
 class Screen extends Component {
+    #components = {
+        startBtn: undefined
+    }
 
     constructor({ classList = '', type } = {}) {
         super({
@@ -104,7 +108,27 @@ class Screen extends Component {
         this.element.classList.add(enum_cssClasses.backGlow);
     }
 
+    buildStartBtn({ text, id } = {}) {
 
+        const events = [
+            new SnakeWeb_Event({
+                type: SnakeWeb_Event.Types.Click,
+                action: (e) => {
+                    const event_startGame = new Event(SnakeWeb_Event.Types.Custom.StartGame, {
+                        bubbles: true
+                    })
+
+                    this.element.dispatchEvent(event_startGame);
+                }
+            })
+        ]
+
+
+        this.#StartBtn = new Btn_Start({ text: text, id: id, events: events });
+    }
+
+    get StartBtn() { return this.#components.startBtn; }
+    set #StartBtn(value) { this.#components.startBtn = value; }
 }
 
 class Screen_Play extends Screen {
@@ -121,13 +145,32 @@ class Screen_Play extends Screen {
 
     }
 
+
+
     get Context() { return this.#context; }
     set #Context(value) { this.#context = value; }
 }
 
 class Screen_Start extends Screen {
+
+    constructor({ classList = enum_cssClasses.startScreen, text = 'Start' } = {}) {
+        super({
+            classList: classList
+        })
+
+        this.buildStartBtn({
+            text: text,
+            id: "startBtn"
+        })
+
+        this.element.append(this.StartBtn.element);
+    }
+
+}
+
+class Screen_GameOver extends Screen {
     #component = {
-        startBtn: undefined
+        Score: undefined
     }
 
     constructor({ classList = enum_cssClasses.startScreen } = {}) {
@@ -135,33 +178,22 @@ class Screen_Start extends Screen {
             classList: classList
         })
 
-        this.#build();
+        this.buildStartBtn({
+            text: 'Try Again',
+            id: 'TryAgainBtn'
+        })
+        
+        this.element.append(this.StartBtn.element);
 
-        this.element.append(this.#component.startBtn.element);
+        this.#component.Score = new Component({ classList: enum_cssClasses.tryAgainScore });   
+        this.element.append(this.#component.Score.element);
+        
     }
 
-    #build({ } = {}) {
-        const createComponents = (() => {
-            const startBtn = (() => {
-                const events = [
-                    new SnakeWeb_Event({
-                        type: SnakeWeb_Event.Types.Click,
-                        action: (e) => {
-                            const event_startGame = new Event(SnakeWeb_Event.Types.Custom.StartGame, {
-                                bubbles: true
-                            })
+    showScore() {
 
-                            this.element.dispatchEvent(event_startGame);
-                        }
-                    })
-                ]
-
-                this.#component.startBtn = new Btn_Start({ text: "Start", id: "startBtn", events: events });
-            })();
-        })();
+       this.#component.Score.element.innerHTML = 'Score: ' + screenConductor.Score.PreviousScore + '';
     }
-    get StartBtn() { return this.#component.startBtn; }
-    set StartBtn(value) { this.#component.startBtn = value; }
 }
 
 class Btn extends Component {
@@ -192,6 +224,7 @@ class Btn_Start extends Btn {
 
 class Score extends Component {
     #score = 0
+    #previousScore = 0
 
     constructor({ } = {}) {
         super({
@@ -208,11 +241,13 @@ class Score extends Component {
     }
 
     reset() {
+        this.#previousScore = this.#score;
         this.#Score = 0;
         this.element.innerHTML = this.Score;
     }
 
     get Score() { return this.#score; }
+    get PreviousScore() { return this.#previousScore; }
     set #Score(value) { this.#score = value; }
 }
 
@@ -220,14 +255,16 @@ class ScreenConductor {
     #screens = {
         Screen_Start: undefined,
         Screen_Play: undefined,
+        Screen_GameOver: undefined,
         Score: undefined,
         GameArea: undefined
     }
 
     constructor({ } = {}) {
-        this.Screen_Start = new Screen_Start({ classList: enum_cssClasses.startScreen });
+        this.Screen_Start = new Screen_Start({});
         this.Screen_Play = new Screen_Play({});
         this.Score = new Score({});
+        this.Screen_GameOver = new Screen_GameOver({});
         this.GameArea = new GameArea({});
         body.append(this.GameArea.element);
         body = this.GameArea.element;
@@ -243,10 +280,18 @@ class ScreenConductor {
         this.#showScreen(this.Screen_Play.element);
     }
 
+    showGameOverScreen() {
+        this.Score.reset();
+        this.Screen_GameOver.showScore();
+        this.#showScreen(this.Screen_GameOver.element);
+
+    }
+
     #clearScreens() {
         const screens = [
             this.Screen_Start,
             this.Screen_Play,
+            this.Screen_GameOver,
             this.Score
         ]
 
@@ -269,6 +314,8 @@ class ScreenConductor {
     set Score(value) { this.#screens.Score = value; }
     get GameArea() { return this.#screens.GameArea; }
     set GameArea(value) { this.#screens.GameArea = value; }
+    get Screen_GameOver() { return this.#screens.Screen_GameOver; }
+    set Screen_GameOver(value) { this.#screens.Screen_GameOver = value; }
 
 }
 
@@ -277,7 +324,7 @@ class snake {
     #eggCollection;
     #velocity;
 
-    constructor({ eggCollection } = {}) {
+    constructor({ eggCollection = [] } = {}) {
         this.#eggCollection = eggCollection;
         this.#velocity = new SnakeVelocity();
         this.reset();
@@ -297,7 +344,7 @@ class snake {
 
     add() {
         let newX = this.Snake[0].x + this.#velocity.xShift;
-        let newY = this.Snake[0].y + this.#velocity.yShirt;
+        let newY = this.Snake[0].y + this.#velocity.yShift;
         let newSnakeHead = { x: newX, y: newY };
         this.Snake.unshift(newSnakeHead);
     }
@@ -319,13 +366,13 @@ class snake {
                 return hitLeftWall || hitRightWall || hitTopWall || hitBottomWall;
             })(),
             hitBody = (() => {
+                for (let i = 1; i < this.#snake.length; i++) {
+                        if (snakepart.x === this.#snake[i].x && snakepart.y === this.#snake[i].y) {
+                            return true;
+                        }
+                }
                 return false;
             })()
-
-
-
-
-
 
         if (passedBoundary || hitBody) {
             const gameEvent = new GameEvent({
@@ -338,28 +385,29 @@ class snake {
     }
 
     checkIfAte() {
-        console.log(this.#eggCollection);
-        if (this.#snake.x === this.#eggCollection.Egg.x && this.#snake.y === this.#eggCollection.Egg.y) {
+        if (this.#snake[0].x === this.#eggCollection[0].x && this.#snake[0].y === this.#eggCollection[0].y) {
             //Create a new game event
             const gameEvent = new GameEvent({
-                action: () => { screenConductor.increase(); }
+                action: () => {
+                    screenConductor.Score.increase();
+                    game.Egg.generate();
+                }
             })
 
             //Add this event to the game's events collection
             game.addEvent(gameEvent);
         }
         else {
-            this.Snake.remove();
+            this.remove();
         }
 
     }
 
-    update() {
-
+    update(egg) {
+        this.#eggCollection = egg;
         this.add();
         this.checkIfAte();
         this.checkIfDead();
-        // if (this.#snake.checkIfDead()) game.events.Add(Events_Collector.enum_eventTypes.dead);
 
     }
 
@@ -527,7 +575,6 @@ class Game {
     #snakeDraw = undefined
     #egg = undefined
     #eggDraw = undefined
-    #eggCollection = new Collection();
     events = new Collection();
     #gameState = Game.enum_gameState.play;
     static enum_gameState = Object.freeze({
@@ -536,29 +583,34 @@ class Game {
     })
 
     constructor({ } = {}) {
-        // apparently we gotta make a DING DANG EGG SPAWNER
         this.#egg = new Egg();
-        this.#Snake = new snake(this.#eggCollection);
+        this.#Snake = new snake({ eggCollection: this.#egg.Egg });
         this.#SnakeDraw = new Draw_Snake();
         this.#eggDraw = new Draw_Egg();
 
     }
 
     advanceBoardState() {
+    
         for (const event of this.events.objects) {
-            event.action();
+                event.action();
         }
+        this.events.clear();
+        
         this.#SnakeDraw.canvasClear();
         this.#EggDraw.draw(this.#egg.Egg);
-        this.Snake.update();
-        this.#SnakeDraw.draw(this.#Snake.Snake);
+        this.Snake.update(this.#egg.Egg);
+        this.#SnakeDraw.draw(this.Snake.Snake);
     }
 
     gameOver() {
-        this.#Snake.reset();
-        this.#Egg.generate();
+        this.Snake.reset();
+        this.#egg.generate();
         this.#snakeDraw.canvasClear();
-        screenConductor.showStartScreen();
+        this.#gameState = Game.enum_gameState.play;
+        screenConductor.showGameOverScreen();
+        this.events.clear();
+
     }
 
     checkGameOver() {
@@ -622,21 +674,23 @@ class GameEvent {
     constructor({ action } = {}) {
         this.#action = action
     }
+
+    get action() { return this.#action; }
 }
 
 
 const screenConductor = new ScreenConductor();
 screenConductor.showStartScreen();
 const game = new Game();
-
 function Main() {
 
     if (game.checkGameOver()) return;
 
-    setTimeout(function onTick() {
-        game.advanceBoardState();
-        Main();
-    }, 100)
+        setTimeout(function onTick() {
+            game.advanceBoardState();
+            Main();
+        }, 100)
+   
 }
 
 
