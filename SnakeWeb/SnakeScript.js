@@ -1,4 +1,5 @@
-﻿const board_border = 'hsla(265, 100%, 97%, 1)';
+﻿
+const board_border = 'hsla(265, 100%, 97%, 1)';
 const board_background = "hsla(265, 100%, 2%, 1)";
 const snake_col = 'hsla(308, 69%, 98%, 1)';
 const snake_border = 'hsla(308, 69%, 46%, 1)';
@@ -171,7 +172,6 @@ function gen_food() {
         foodx = random_food(0, snakeboard.width - 10);
         foody = random_food(0, snakeboard.height - 10);
         var redoDraw = insideSnake(foodx, foody);
-        console.log(redoDraw);
     } while (redoDraw = false);
 
     snake.forEach(function has_eaten_food(part) {
@@ -191,7 +191,6 @@ function drawFood() {
 function insideSnake(x, y) {
     var result = false;
     snake.forEach((part) => {
-       // console.log(`${part.x} ${part.y} ${x} ${y}`);
        if (part.x === x && part.y === y) {
            result = true;
         }

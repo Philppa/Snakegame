@@ -1,6 +1,7 @@
-﻿.body {
+﻿body {
     background-color: #313338
 }
+
 .body-space {
     display: flex;
     height: 97vh;
@@ -19,18 +20,19 @@
     align-content: center;
 }
 
-.gameCanvas {
+.back-glow {
     box-shadow: 0px 0px 5px 2px #E5E0ED;
-    
 }
+
 .start-screen {
     align-content: center;
     text-align: center;
     height: 400px;
     width: 400px;
     background-color: hsla(265, 100%, 2%, 1);
+    color: whitesmoke;
+    font-size: 25px;
 }
-
 
 .score {
     text-align: left;
@@ -38,9 +40,30 @@
     color: whitesmoke;
     width: 100%;
 }
+
+.try-again-score {
+    margin-top: 5px;
+    align-content: center;
+    text-align: center;
+    color: whitesmoke;
+    font-size: 18px;
+}
+
 #startBtn {
     border-radius: 7px;
     border: none;
     background-color: whitesmoke;
     box-shadow: 0px 0px 3px 2px #E5E0ED;
+}
+
+#TryAgainBtn {
+    border-radius: 7px;
+    border: none;
+    background-color: whitesmoke;
+    box-shadow: 0px 0px 3px 2px #E5E0ED;
+}
+
+#gameCanvas {
+    background-color: hsla(265, 100%, 2%, 1);
+    margin-bottom: -4px;
 }
